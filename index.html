@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sweep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* ===== НАСТРОЙКИ ===== */
+:root{
+  color-scheme:dark;
+  /* монохром */
+  --bg:#0A0A0B;
+  --panel:#111113;
+  --line:#1F1F22;
+  --fg:#EDEDEE;
+  --mut:#85858B;
+  --dim:#4A4A50;
+  /* бордо */
+  --wine-bg:#12070A;
+  --wine-panel:#1B0B10;
+  --wine-line:#36121B;
+  --wine:#8E2436;
+  --wine-hi:#C9566A;
+  /* движение цены */
+  --up:#7DBF98;
+  --dn:#C9566A;
+
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --f:"Geist","Segoe UI",system-ui,sans-serif;
+  --fm:"Geist Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+:focus-visible{outline:1px solid var(--fg);outline-offset:3px;border-radius:4px}
+.mono{font-family:var(--fm);font-variant-numeric:tabular-nums}
+.wrap{max-width:1120px;margin-inline:auto;padding-inline:20px}
+
+/* разделы */
+.sec{padding-block:64px;border-top:1px solid var(--line)}
+.sec.wine{
+  --panel:var(--wine-panel);--line:var(--wine-line);
+  background:var(--wine-bg);border-top-color:var(--wine-line)
+}
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:10px 24px;margin-bottom:28px}
+.label{font-family:var(--fm);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.wine .label{color:var(--wine-hi)}
+h2{font-size:clamp(26px,3.4vw,38px);font-weight:500;letter-spacing:-.03em;line-height:1.05;margin:8px 0 0;text-wrap:balance}
+.note{color:var(--mut);font-size:13px;margin:0;max-width:44ch}
+
+/* появление при прокрутке — видно и без анимации */
+@supports (animation-timeline: view()){
+  .reveal{animation:rv linear both;animation-timeline:view();animation-range:entry 0% entry 55%}
+  @keyframes rv{from{opacity:.2;transform:translateY(28px)}to{opacity:1;transform:none}}
+}
+
+/* ===== ШАПКА ===== */
+.top{position:sticky;top:0;z-index:30;background:rgba(10,10,11,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:56px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em}
+.logo i{width:8px;height:8px;background:var(--fg);border-radius:50%;animation:beacon 2.6s infinite}
+@keyframes beacon{0%{box-shadow:0 0 0 0 rgba(237,237,238,.5)}70%{box-shadow:0 0 0 9px rgba(237,237,238,0)}100%{box-shadow:0 0 0 0 rgba(237,237,238,0)}}
+nav{display:flex;gap:22px;font-size:13px;color:var(--mut)}
+nav a{position:relative;transition:color .25s}
+nav a::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:1px;background:var(--fg);transform:scaleX(0);transform-origin:right;transition:transform .35s var(--ease)}
+nav a:hover{color:var(--fg)}
+nav a:hover::after{transform:scaleX(1);transform-origin:left}
+.clock{font-family:var(--fm);font-size:13px;color:var(--mut)}
+
+/* ===== HERO ===== */
+.hero{padding-block:72px 64px}
+.hero h1{font-size:clamp(44px,7.4vw,96px);font-weight:500;letter-spacing:-.045em;line-height:.92;margin:14px 0 0}
+.hero h1 .w{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.06em}
+.hero h1 .w>span{display:inline-block;animation:rise 1s var(--ease) both}
+.hero h1 .dim{color:var(--dim)}
+@keyframes rise{from{transform:translateY(105%)}to{transform:none}}
+.hero-row{display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:end}
+.next-card{border:1px solid var(--line);border-radius:14px;padding:20px;animation:fadeup .8s .5s both}
+@keyframes fadeup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.next-card .label{display:flex;align-items:center;gap:8px}
+.next-card .label i{width:6px;height:6px;border-radius:50%;background:var(--wine-hi);animation:beaconW 1.8s infinite}
+@keyframes beaconW{0%{box-shadow:0 0 0 0 rgba(201,86,106,.6)}70%{box-shadow:0 0 0 8px rgba(201,86,106,0)}100%{box-shadow:0 0 0 0 rgba(201,86,106,0)}}
+.next-title{font-size:20px;font-weight:500;margin:10px 0 4px;letter-spacing:-.01em}
+.next-meta{color:var(--mut);font-size:13px}
+.countdown{font-family:var(--fm);font-size:34px;letter-spacing:-.02em;margin-top:14px}
+
+/* ===== ССЫЛКА НА TRADINGVIEW ===== */
+.tv{display:inline-flex;align-items:center;gap:10px;position:relative;font-size:26px;font-weight:500;letter-spacing:-.02em}
+.tv .nm{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .45s var(--ease)}
+.tv .arr{display:inline-grid;place-items:center;width:28px;height:28px;border:1px solid var(--line);border-radius:50%;font-size:13px;overflow:hidden;position:relative;transition:border-color .3s,background .3s,transform .4s var(--spring)}
+.tv .arr span{transition:transform .4s var(--ease)}
+.tv .arr span+span{position:absolute;transform:translate(-150%,150%)}
+.tv .hint{position:absolute;left:0;top:calc(100% + 6px);font-size:11px;font-family:var(--fm);letter-spacing:.08em;text-transform:uppercase;color:var(--wine-hi);opacity:0;transform:translateY(-4px);transition:opacity .3s,transform .3s var(--ease);white-space:nowrap}
+.tv:hover .nm,.tv:focus-visible .nm{background-size:100% 1px}
+.tv:hover .arr{background:var(--fg);color:var(--bg);border-color:var(--fg);transform:rotate(0deg) scale(1.08)}
+.tv:hover .arr span:first-child{transform:translate(150%,-150%)}
+.tv:hover .arr span+span{transform:none}
+.tv:hover .hint{opacity:1;transform:none}
+.tv.sm{font-size:16px}
+.tv.sm .arr{width:22px;height:22px;font-size:11px}
+
+/* ===== ОСНОВНЫЕ ПАРЫ ===== */
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 22px 8px;display:flex;flex-direction:column;gap:14px;transition:border-color .3s}
+.pair:hover{border-color:var(--wine)}
+.pair-top{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.pair-top small{color:var(--mut);font-size:12px}
+.tvw{height:190px;margin-inline:-8px;position:relative}
+.tvw .tradingview-widget-container,.tvw .tradingview-widget-container__widget{height:100%}
+.tvw .copyright{display:none}
+.tvw-fallback{position:absolute;inset:0;display:grid;place-items:center;color:var(--mut);font-size:13px;text-align:center;padding:12px}
+
+/* ===== ФЬЮЧЕРСЫ ===== */
+.futs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.fut{background:var(--bg);padding:20px;display:flex;flex-direction:column;gap:12px;transition:background .3s}
+.fut:hover{background:var(--panel)}
+.fut-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.fut-top small{font-family:var(--fm);font-size:11px;color:var(--mut)}
+.px{font-family:var(--fm);font-size:28px;letter-spacing:-.02em;transition:color .6s}
+.px.flash-up{color:var(--up);transition:none}
+.px.flash-dn{color:var(--dn);transition:none}
+.fut-row{display:flex;justify-content:space-between;font-family:var(--fm);font-size:12px;color:var(--mut)}
+.chg.up{color:var(--up)}.chg.dn{color:var(--dn)}
+.fut-chart{height:120px;margin-inline:-10px;position:relative}
+.fut-chart .tvw-fallback{font-size:12px}
+.range{position:relative;height:2px;background:var(--line);border-radius:2px}
+.range i{position:absolute;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--fg);transform:translateX(-50%);transition:left .6s var(--ease)}
+.feed{display:flex;align-items:center;gap:8px;font-family:var(--fm);font-size:11px;color:var(--mut)}
+.feed i{width:6px;height:6px;border-radius:50%;background:var(--dim)}
+.feed.live i{background:var(--up);animation:beaconG 2s infinite}
+@keyframes beaconG{0%{box-shadow:0 0 0 0 rgba(125,191,152,.6)}70%{box-shadow:0 0 0 7px rgba(125,191,152,0)}100%{box-shadow:0 0 0 0 rgba(125,191,152,0)}}
+
+/* ===== КАЛЕНДАРЬ ===== */
+.cal-bar{display:flex;flex-wrap:wrap;gap:12px 20px;justify-content:space-between;align-items:center;margin-bottom:16px}
+.days{position:relative;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.days button{position:relative;z-index:1;padding:8px 14px;font-size:13px;color:var(--mut);white-space:nowrap;transition:color .3s;border-radius:8px}
+.days button[aria-selected="true"]{color:var(--bg);font-weight:500}
+.days button .today{display:block;font-size:10px;font-family:var(--fm);letter-spacing:.08em;opacity:.7}
+.days .pill{position:absolute;top:0;bottom:0;background:var(--fg);border-radius:8px;transition:left .45s var(--spring),width .45s var(--spring)}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--mut);transition:all .25s}
+.chip:hover{border-color:var(--mut);color:var(--fg)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip.st{font-size:11px;letter-spacing:1px}
+
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.legend div{background:var(--bg);padding:12px 14px;font-size:12px;color:var(--mut);display:flex;gap:10px;align-items:baseline}
+.legend b{color:var(--fg);font-weight:500;font-size:13px}
+
+.events{border-top:1px solid var(--line)}
+.ev{display:grid;grid-template-columns:62px 52px 64px minmax(0,1fr) 220px;gap:14px;align-items:center;padding:14px 4px;border-bottom:1px solid var(--line);animation:rowIn .45s var(--ease) both;transition:background .25s}
+.ev:hover{background:var(--panel)}
+@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.ev .t{font-family:var(--fm);font-size:13px}
+.ev .cur{font-family:var(--fm);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:2px 6px;text-align:center}
+.stars{font-size:13px;letter-spacing:2px;white-space:nowrap}
+.stars .off{color:var(--dim)}
+.ev .ttl{font-weight:500;min-width:0}
+.ev .ttl small{display:block;color:var(--mut);font-weight:400;font-size:12px;font-family:var(--fm);margin-top:2px}
+.tag{white-space:nowrap;font-size:11px;font-family:var(--fm);letter-spacing:.04em;padding:4px 8px;border-radius:6px;justify-self:end;text-align:right;border:1px solid var(--line);color:var(--mut)}
+.ev.i3 .tag{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.ev.i3.max .tag{background:var(--wine);color:var(--fg);border-color:var(--wine)}
+.ev.i2 .tag{color:var(--fg);border-color:var(--mut)}
+.ev.past>*{opacity:.4}
+.ev.next{background:linear-gradient(90deg,rgba(142,36,54,.18),transparent 70%)}
+.ev.next .t::after{content:" ●";color:var(--wine-hi);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.2}}
+.empty,.cal-state{padding:32px 4px;color:var(--mut);font-size:14px}
+.cal-src{margin-top:14px;font-size:12px;color:var(--dim);font-family:var(--fm)}
+.cal-src a{text-decoration:underline;text-underline-offset:3px}
+
+/* ===== KILLZONES ===== */
+.kz{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.kz-top{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline;margin-bottom:20px}
+.kz-now{font-family:var(--fm);font-size:30px;letter-spacing:-.02em}
+.kz-next{color:var(--mut);font-size:14px}
+.kz-next b{color:var(--fg);font-weight:500}
+.kz-track{position:relative;height:66px;background:repeating-linear-gradient(90deg,transparent 0 calc(100%/24 - 1px),var(--line) calc(100%/24 - 1px) calc(100%/24))}
+.zone{position:absolute;top:6px;height:32px;border:1px solid var(--line);border-radius:6px;font-size:11px;padding:7px 8px;white-space:nowrap;overflow:hidden;color:var(--mut);background:var(--wine-bg);transition:all .4s}
+.zone.live{background:var(--wine);border-color:var(--wine-hi);color:var(--fg);animation:breathe 2.2s ease-in-out infinite}
+@keyframes breathe{50%{box-shadow:0 0 24px rgba(201,86,106,.35)}}
+.kz-hours{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;font-family:var(--fm);font-size:10px;color:var(--mut)}
+.needle{position:absolute;top:0;bottom:16px;width:1px;background:var(--fg);transition:left 1s linear}
+.needle::before{content:"";position:absolute;top:-2px;left:-3px;width:7px;height:7px;border-radius:50%;background:var(--fg)}
+
+/* ===== ПРИЛОЖЕНИЕ ===== */
+.app{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
+.app h2{font-size:clamp(34px,5vw,60px)}
+.app p{color:var(--mut);max-width:44ch}
+.feat{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:8px;font-size:14px}
+.feat li{display:flex;gap:10px}
+.feat li::before{content:"—";color:var(--wine-hi)}
+.dl{display:inline-flex;align-items:center;gap:14px;margin-top:28px;padding:16px 22px 16px 18px;border-radius:12px;background:var(--fg);color:var(--bg);font-weight:500;position:relative;overflow:hidden;transition:transform .3s var(--spring)}
+.dl::before{content:"";position:absolute;inset:0;background:var(--wine);transform:translateY(101%);transition:transform .45s var(--ease)}
+.dl>*{position:relative}
+.dl:hover{transform:translateY(-2px);color:var(--fg)}
+.dl:hover::before{transform:none}
+.dl:active{transform:scale(.97)}
+.dl .ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;border:1px solid currentColor;transition:transform .45s var(--ease)}
+.dl:hover .ic{transform:translateY(3px)}
+.dl small{display:block;font-size:11px;font-family:var(--fm);opacity:.7;font-weight:400}
+.dl.disabled{opacity:.55;pointer-events:none}
+.mock{border:1px solid var(--line);border-radius:14px;background:var(--wine-panel);aspect-ratio:4/3;max-width:100%;padding:14px;display:flex;flex-direction:column;gap:10px}
+.mock .bar{display:flex;gap:6px}
+.mock .bar i{width:8px;height:8px;border-radius:50%;background:var(--wine-line)}
+.mock svg{flex:1;width:100%}
+
+
+/* ===== FEAR & GREED ===== */
+.fng-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.fng-src{font-family:var(--fm);font-size:11px;color:var(--mut);transition:color .25s}
+.fng-src:hover{color:var(--fg)}
+.fng-body{display:flex;align-items:center;gap:20px;margin-top:10px}
+.gauge{width:190px;max-width:55%;flex:none}
+#fngArc{transition:stroke-dasharray 1.4s var(--ease)}
+#fngNeedle{transition:transform 1.4s var(--spring)}
+.fng-num{font-size:56px;line-height:1;letter-spacing:-.04em;transition:color .6s}
+.fng-cls{color:var(--mut);font-size:14px;margin-top:6px}
+.fng-hist{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line);margin:16px -20px -20px;border-radius:0 0 14px 14px;overflow:hidden}
+.fng-hist div{background:var(--bg);padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.fng-hist small{font-size:11px;color:var(--mut)}
+.fng-hist b{font-weight:500;font-size:16px}
+
+/* ===== КАЛЕНДАРЬ INVESTING ===== */
+
+/* ★★★ — бордо */
+.stars .on{color:var(--fg)}
+.ev.i3{box-shadow:inset 2px 0 0 var(--wine)}
+.ev.i3 .stars .on{color:var(--wine-hi)}
+.ev.i3 .ttl{color:#fff}
+.ev.i3 .tag{background:transparent;color:var(--wine-hi);border-color:var(--wine)}
+.ev.i3.max{background:linear-gradient(90deg,rgba(142,36,54,.22),transparent 60%)}
+.ev.i3.max .tag{background:var(--wine);color:var(--fg);border-color:var(--wine)}
+.ev.i2 .tag{color:var(--fg);border-color:var(--dim)}
+.ev.i0 .tag{border-style:dashed}
+.cal-next{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:12px 14px;margin-bottom:14px;border:1px solid var(--wine);border-radius:10px;background:rgba(142,36,54,.12);font-size:13px;color:var(--mut)}
+.cal-next i{width:6px;height:6px;border-radius:50%;background:var(--wine-hi);animation:beaconW 1.8s infinite}
+.cal-next b{color:var(--fg);font-weight:500}
+.cal-next .cd{margin-left:auto;color:var(--wine-hi)}
+.legend .i3s .stars{color:var(--wine-hi)}
+.zone.closed{background:repeating-linear-gradient(135deg,transparent 0 4px,var(--line) 4px 5px);border-style:dashed}
+.cal-src a{text-decoration:underline;text-underline-offset:3px}
+
+/* ===== ПРИЛОЖЕНИЕ: промо и скриншот ===== */
+.new{display:inline-block;background:var(--wine);color:var(--fg);padding:2px 7px;border-radius:5px;margin-right:8px;letter-spacing:.1em}
+.promo{font-size:18px;line-height:1.5;color:var(--fg)!important;opacity:.85}
+.mock img{width:100%;flex:1;min-height:0;object-fit:cover;object-position:top left;border-radius:8px;display:block}
+.mock.has-shot svg{display:none}
+.mock.has-shot{aspect-ratio:auto}
+
+/* ===== КОНТАКТЫ ===== */
+.contact-row{padding-block:22px;border-top:1px solid var(--line)}
+.contact{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px}
+.contact-lbl{font-size:13px;color:var(--mut);display:flex;align-items:baseline;gap:12px}
+.tg{position:relative;display:inline-flex;align-items:center;gap:10px;padding:5px 14px 5px 5px;border-radius:999px;
+  background:#050505;border:1px solid var(--wine-line);overflow:hidden;isolation:isolate;font-size:14px;transition:border-color .35s}
+.tg::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--wine);clip-path:circle(0% at 17px 50%);transition:clip-path .55s var(--ease)}
+.tg:hover{border-color:var(--wine-hi)}
+.tg:hover::before{clip-path:circle(150% at 17px 50%)}
+.tg-ic{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--wine);color:var(--fg);transition:background .35s,color .35s,transform .45s var(--spring)}
+.tg:hover .tg-ic{background:var(--fg);color:var(--wine);transform:rotate(-12deg)}
+.tg-nm{font-weight:500;letter-spacing:-.01em}
+.tg-go{font-size:12px;color:var(--mut);transition:color .35s,transform .35s var(--ease)}
+.tg:hover .tg-go{color:var(--fg);transform:translate(2px,-2px)}
+
+footer{padding-block:40px;border-top:1px solid var(--line);color:var(--dim);font-size:12px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+
+@media (max-width:900px){
+  .futs{grid-template-columns:repeat(2,1fr)}
+  .ev{grid-template-columns:56px 48px 60px minmax(0,1fr)}
+  .ev .tag{grid-column:4;justify-self:start}
+}
+@media (max-width:760px){
+  nav{display:none}
+  .hero-row,.pairs,.app{grid-template-columns:1fr}
+  .legend{grid-template-columns:1fr}
+}
+@media (max-width:480px){
+  .futs{grid-template-columns:1fr}
+  .ev{grid-template-columns:50px 1fr;gap:6px 12px}
+  .ev .cur{grid-column:1;grid-row:2}
+  .ev .stars{grid-column:2;grid-row:1;justify-self:end}
+  .ev .ttl{grid-column:2;grid-row:2}
+  .ev .tag{grid-column:2}
+  .sec{padding-block:48px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:1ms!important;animation-delay:0ms!important;transition-duration:1ms!important}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#"><i></i>Sweep</a>
+    <nav>
+      <a href="#markets">Рынок</a>
+      <a href="#futures">Фьючерсы</a>
+      <a href="#fng">Страх и жадность</a>
+      <a href="#calendar">Новости</a>
+      <a href="#sessions">Сессии</a>
+      <a href="#app">TradingJournal</a>
+      <a href="#contact">Связь</a>
+    </nav>
+    <span class="clock" id="clock">--:-- МСК</span>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-row">
+    <div>
+      <div class="label">Sweep · терминал трейдера</div>
+      <h1><span class="w"><span>Рынок,</span></span> <span class="w"><span style="animation-delay:.08s">новости</span></span><br><span class="w"><span class="dim" style="animation-delay:.16s">и&nbsp;сессии</span></span></h1>
+    </div>
+    <div class="next-card fng" id="fng">
+      <div class="fng-head">
+        <div class="label"><i></i>Индекс страха и жадности · крипто</div>
+        <a class="fng-src" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener">alternative.me ↗</a>
+      </div>
+      <div class="fng-body">
+        <svg class="gauge" viewBox="0 0 200 112" aria-hidden="true">
+          <defs>
+            <linearGradient id="fngGrad" x1="0" x2="1">
+              <stop offset="0" stop-color="#8E2436"/><stop offset=".5" stop-color="#4A4A50"/><stop offset="1" stop-color="#7DBF98"/>
+            </linearGradient>
+          </defs>
+          <path d="M16 100 A84 84 0 0 1 184 100" fill="none" stroke="#1F1F22" stroke-width="12" stroke-linecap="round"/>
+          <path id="fngArc" d="M16 100 A84 84 0 0 1 184 100" fill="none" stroke="url(#fngGrad)" stroke-width="12" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+          <g id="fngNeedle" style="transform-origin:100px 100px;transform:rotate(-90deg)">
+            <line x1="100" y1="100" x2="100" y2="30" stroke="#EDEDEE" stroke-width="2" stroke-linecap="round"/>
+          </g>
+          <circle cx="100" cy="100" r="5" fill="#EDEDEE"/>
+        </svg>
+        <div class="fng-val">
+          <div class="fng-num mono" id="fngNum">--</div>
+          <div class="fng-cls" id="fngCls">загружаю…</div>
+        </div>
+      </div>
+      <div class="fng-hist" id="fngHist">
+        <div><small>Вчера</small><b class="mono">—</b></div>
+        <div><small>Неделя назад</small><b class="mono">—</b></div>
+        <div><small>Месяц назад</small><b class="mono">—</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ОСНОВНЫЕ ПАРЫ (бордо) -->
+<section class="sec wine" id="markets">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label">Основные пары</div><h2>EUR/USD и индекс доллара</h2></div>
+    </div>
+    <div class="pairs">
+      <div class="pair reveal">
+        <div class="pair-top">
+          <a class="tv" href="https://www.tradingview.com/chart/?symbol=FX:EURUSD" target="_blank" rel="noopener">
+            <span class="nm">EUR/USD</span><span class="arr"><span>↗</span><span>↗</span></span>
+            <span class="hint">Открыть в TradingView</span>
+          </a>
+          <small>Евро / Доллар США</small>
+        </div>
+        <div class="tvw" data-symbol="FX:EURUSD"><div class="tvw-fallback">Загружаю котировку…</div></div>
+      </div>
+      <div class="pair reveal">
+        <div class="pair-top">
+          <a class="tv" href="https://www.tradingview.com/chart/?symbol=TVC:DXY" target="_blank" rel="noopener">
+            <span class="nm">DXY</span><span class="arr"><span>↗</span><span>↗</span></span>
+            <span class="hint">Открыть в TradingView</span>
+          </a>
+          <small>Индекс доллара США</small>
+        </div>
+        <div class="tvw" data-symbol="CAPITALCOM:DXY"><div class="tvw-fallback">Загружаю котировку…</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ФЬЮЧЕРСЫ (ч/б) -->
+<section class="sec" id="futures">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label">Бессрочные фьючерсы · USDT</div><h2>Основные активы</h2></div>
+      <div class="feed" id="feed"><i></i><span>подключение…</span></div>
+    </div>
+    <div class="futs reveal" id="futs"></div>
+  </div>
+</section>
+
+<!-- КАЛЕНДАРЬ (ч/б) -->
+<section class="sec" id="calendar">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label">Экономический календарь · время МСК</div><h2>Новости недели</h2></div>
+      <p class="note">Текущая неделя. Чем больше звёзд, тем сильнее новость двигает график.</p>
+    </div>
+
+    <div class="legend">
+      <div><span class="stars">★<span class="off">★★</span></span><span><b>Слабые.</b> Волатильность почти не меняется</span></div>
+      <div><span class="stars">★★<span class="off">★</span></span><span><b>Средние.</b> Умеренная реакция, на график влияют мало</span></div>
+      <div class="i3s"><span class="stars">★★★</span><span><b>Опасные.</b> Резкий рост волатильности, спреды шире</span></div>
+    </div>
+
+    <div class="cal-bar">
+      <div class="days" role="tablist" id="days"><span class="pill" id="dayPill"></span></div>
+      <div class="filters">
+        <span class="filters" id="impFilters">
+          <button class="chip st" data-imp="3" aria-pressed="true">★★★</button>
+          <button class="chip st" data-imp="2" aria-pressed="true">★★</button>
+          <button class="chip st" data-imp="1" aria-pressed="false">★</button>
+        </span>
+        <span class="filters" id="curFilters"></span>
+      </div>
+    </div>
+
+    <div class="cal-next" id="calNext" hidden></div>
+    <div class="events" id="events"><div class="cal-state">Загружаю календарь…</div></div>
+    <div class="cal-src" id="calSrc">Данные: Forex Factory</div>
+  </div>
+</section>
+
+<!-- СЕССИИ (бордо) -->
+<section class="sec wine" id="sessions">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label">Торговые сессии</div><h2>Сессии по московскому времени</h2></div>
+    </div>
+    <div class="kz reveal">
+      <div class="kz-top">
+        <div class="kz-now" id="kzNow">--:--:--</div>
+        <div class="kz-next" id="kzNext">…</div>
+      </div>
+      <div class="kz-track" id="kzTrack">
+        <div class="kz-hours"><span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span></div>
+        <div class="needle" id="needle"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ПРИЛОЖЕНИЕ (бордо, продолжение) -->
+<section class="sec wine" id="app">
+  <div class="wrap app">
+    <div>
+      <div class="label"><span class="new">Новинка</span> Мы выпустили приложение</div>
+      <h2>TradingJournal</h2>
+      <p class="promo">Каждая сделка на своём месте. Пригодится каждому, кто хочет наконец понять, где теряет деньги и что реально работает.</p>
+      <ul class="feat">
+        <li>Кривая equity и серии побед/поражений</li>
+        <li>Разбор паттернов и теги ошибок</li>
+        <li>Импорт сделок из Binance CSV</li>
+      </ul>
+      <a class="dl" id="dlBtn" href="#">
+        <span class="ic">↓</span>
+        <span>Скачать для Windows<small id="dlMeta">последняя версия</small></span>
+      </a>
+    </div>
+    <div class="mock reveal" aria-hidden="true">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <img id="appShot" src="app-screenshot.png" alt="" onerror="this.remove()" onload="this.closest('.mock').classList.add('has-shot')">
+      <svg viewBox="0 0 400 240" preserveAspectRatio="none">
+        <path d="M0 200 L40 188 L80 196 L120 160 L160 170 L200 130 L240 138 L280 96 L320 104 L360 60 L400 44 L400 240 L0 240Z" fill="#8E2436" fill-opacity=".22"/>
+        <path d="M0 200 L40 188 L80 196 L120 160 L160 170 L200 130 L240 138 L280 96 L320 104 L360 60 L400 44" fill="none" stroke="#C9566A" stroke-width="2" vector-effect="non-scaling-stroke"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- КОНТАКТЫ -->
+<section class="contact-row" id="contact">
+  <div class="wrap contact">
+    <span class="contact-lbl"><span class="label">Автор</span> Вопросы и предложения по сайту</span>
+    <a class="tg" href="https://t.me/iceman27475" target="_blank" rel="noopener">
+      <span class="tg-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M21.5 3.5 2.8 10.7c-.9.4-.9 1.6 0 1.9l4.6 1.5 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.4 4.7 3.5c.6.4 1.4.1 1.6-.6L23 4.9c.2-.9-.7-1.7-1.5-1.4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m7.6 14.1 10.3-7.4-7.8 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="tg-nm">@iceman27475</span>
+      <span class="tg-go" aria-hidden="true">↗</span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Sweep · by <a href="https://t.me/iceman27475" target="_blank" rel="noopener" style="color:var(--mut)">@iceman27475</a> · не является инвестиционной рекомендацией</span>
+    <span class="mono" id="footTime"></span>
+  </div>
+</footer>
+
+<script>
+/* ============ НАСТРОЙКИ ============ */
+// Ссылка на установщик TradingJournal (например, релиз на GitHub). Пусто — кнопка неактивна.
+const APP_URL = "https://github.com/IcemanSweep/TradingJournal/releases/latest/download/Trading_Journal.zip";
+const APP_META = "последняя версия · .zip";
+
+// Бессрочные фьючерсы: символ биржи и тикер TradingView
+const FUTURES = [
+  {s:"BTCUSDT", name:"Bitcoin",  tv:"BINANCE:BTCUSDT.P", dec:1},
+  {s:"ETHUSDT", name:"Ethereum", tv:"BINANCE:ETHUSDT.P", dec:2},
+  {s:"SOLUSDT", name:"Solana",   tv:"BINANCE:SOLUSDT.P", dec:2},
+  {s:"BNBUSDT", name:"BNB",      tv:"BINANCE:BNBUSDT.P", dec:2},
+  {s:"XRPUSDT", name:"XRP",      tv:"BINANCE:XRPUSDT.P", dec:4},
+  {s:"DOGEUSDT",name:"Dogecoin", tv:"BINANCE:DOGEUSDT.P",dec:5},
+];
+
+
+const MSK = "Europe/Moscow";
+/* =================================== */
+
+const $ = s => document.querySelector(s);
+const fmtMSK = (d, opt) => new Intl.DateTimeFormat("ru-RU", {timeZone:MSK, ...opt}).format(d);
+
+/* ---------- часы ---------- */
+function tickClock(){
+  const now = new Date();
+  $("#clock").textContent = fmtMSK(now,{hour:"2-digit",minute:"2-digit"}) + " МСК";
+  $("#footTime").textContent = fmtMSK(now,{weekday:"long",day:"numeric",month:"long"});
+}
+tickClock(); setInterval(tickClock, 15000);
+
+/* ---------- TradingView: EUR/USD и DXY ---------- */
+function mountTV(box){
+  const sym = box.dataset.symbol, mono = box.dataset.mono === "1";
+  const c = document.createElement("div");
+  c.className = "tradingview-widget-container";
+  c.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
+  const sc = document.createElement("script");
+  sc.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
+  sc.async = true;
+  sc.innerHTML = JSON.stringify({
+    symbol:sym, width:"100%", height:"100%", locale:"ru", dateRange:"1D",
+    colorTheme:"dark", isTransparent:true, autosize:true, chartOnly:mono, noTimeScale:mono,
+    ...(mono
+      ? {trendLineColor:"rgba(237,237,238,0.9)", underLineColor:"rgba(237,237,238,0.10)", underLineBottomColor:"rgba(237,237,238,0)"}
+      : {trendLineColor:"rgba(201,86,106,1)", underLineColor:"rgba(142,36,54,0.25)", underLineBottomColor:"rgba(142,36,54,0)"})
+  });
+  sc.onload = () => { const fb = box.querySelector(".tvw-fallback"); fb && setTimeout(()=>fb.remove(), 1500); };
+  sc.onerror = () => { const fb = box.querySelector(".tvw-fallback"); if(fb) fb.textContent = "График недоступен"; };
+  c.appendChild(sc);
+  box.appendChild(c);
+}
+document.querySelectorAll(".tvw").forEach(mountTV);
+
+/* ---------- Фьючерсы: Binance, запасной вариант Bybit ---------- */
+const futs = $("#futs");
+futs.innerHTML = FUTURES.map(f => `
+  <div class="fut" id="f-${f.s}">
+    <div class="fut-top">
+      <a class="tv sm" href="https://www.tradingview.com/chart/?symbol=${f.tv}" target="_blank" rel="noopener">
+        <span class="nm">${f.s.replace("USDT","")}</span><span class="arr"><span>↗</span><span>↗</span></span>
+      </a>
+      <small>${f.name} · PERP</small>
+    </div>
+    <div class="px">—</div>
+    <div class="tvw fut-chart" data-symbol="BYBIT:${f.s}.P" data-mono="1"><div class="tvw-fallback">график…</div></div>
+    <div class="range"><i style="left:50%"></i></div>
+    <div class="fut-row"><span class="lo">L —</span><span class="chg">—</span><span class="hi">H —</span></div>
+  </div>`).join("");
+futs.querySelectorAll(".fut-chart").forEach(mountTV);
+
+const state = {};
+function fmtNum(v, dec){ return Number(v).toLocaleString("en-US",{minimumFractionDigits:dec, maximumFractionDigits:dec}); }
+function update(sym, d){ // d: {last, pct, hi, lo}
+  const f = FUTURES.find(x=>x.s===sym); if(!f) return;
+  const prev = state[sym] || {};
+  const cur = state[sym] = {...prev, ...Object.fromEntries(Object.entries(d).filter(([,v])=>v!==undefined && !isNaN(v)))};
+  const el = document.getElementById("f-"+sym);
+  const px = el.querySelector(".px");
+  if(cur.last!==undefined){
+    px.textContent = fmtNum(cur.last, f.dec);
+    if(prev.last!==undefined && cur.last!==prev.last){
+      px.classList.remove("flash-up","flash-dn"); void px.offsetWidth;
+      px.classList.add(cur.last>prev.last?"flash-up":"flash-dn");
+      clearTimeout(px._t); px._t = setTimeout(()=>px.classList.remove("flash-up","flash-dn"), 250);
+    }
+  }
+  if(cur.pct!==undefined){
+    const c = el.querySelector(".chg");
+    c.textContent = (cur.pct>=0?"+":"") + cur.pct.toFixed(2) + "%";
+    c.className = "chg " + (cur.pct>=0?"up":"dn");
+  }
+  if(cur.hi!==undefined && cur.lo!==undefined){
+    el.querySelector(".lo").textContent = "L " + fmtNum(cur.lo, f.dec);
+    el.querySelector(".hi").textContent = "H " + fmtNum(cur.hi, f.dec);
+    if(cur.last!==undefined && cur.hi>cur.lo){
+      const p = Math.max(0,Math.min(1,(cur.last-cur.lo)/(cur.hi-cur.lo)));
+      el.querySelector(".range i").style.left = (p*100)+"%";
+    }
+  }
+}
+function setFeed(live, text){ const f=$("#feed"); f.classList.toggle("live",live); f.querySelector("span").textContent=text; }
+
+let gotData = false, ws = null, source = "binance";
+function connectBinance(){
+  source = "binance";
+  const streams = FUTURES.map(f=>f.s.toLowerCase()+"@ticker").join("/");
+  try { ws = new WebSocket("wss://fstream.binance.com/stream?streams="+streams); } catch(e){ return connectBybit(); }
+  ws.onmessage = e => {
+    const m = JSON.parse(e.data).data; if(!m) return;
+    gotData = true; setFeed(true, "Binance Futures · live");
+    update(m.s, {last:+m.c, pct:+m.P, hi:+m.h, lo:+m.l});
+  };
+  ws.onclose = () => { if(source==="binance") setTimeout(gotData?connectBinance:connectBybit, 2000); };
+  setTimeout(()=>{ if(!gotData && source==="binance"){ try{ws.close()}catch(e){} connectBybit(); } }, 6000);
+}
+function connectBybit(){
+  source = "bybit"; setFeed(false, "переключаюсь на Bybit…");
+  ws = new WebSocket("wss://stream.bybit.com/v5/public/linear");
+  ws.onopen = () => {
+    ws.send(JSON.stringify({op:"subscribe", args:FUTURES.map(f=>"tickers."+f.s)}));
+    clearInterval(ws._ping); ws._ping = setInterval(()=>{ try{ws.send('{"op":"ping"}')}catch(e){} }, 20000);
+  };
+  ws.onmessage = e => {
+    const m = JSON.parse(e.data); if(!m.topic || !m.data) return;
+    const d = m.data; gotData = true; setFeed(true, "Bybit Futures · live");
+    update(d.symbol, {
+      last: d.lastPrice!==undefined? +d.lastPrice : undefined,
+      pct:  d.price24hPcnt!==undefined? +d.price24hPcnt*100 : undefined,
+      hi:   d.highPrice24h!==undefined? +d.highPrice24h : undefined,
+      lo:   d.lowPrice24h!==undefined? +d.lowPrice24h : undefined,
+    });
+  };
+  ws.onclose = () => { clearInterval(ws._ping); setFeed(false, "нет соединения, повтор…"); setTimeout(connectBybit, 3000); };
+}
+connectBinance();
+
+/* ---------- Календарь новостей: собственный вывод ---------- */
+// Откуда брать данные (по порядку). Первый — файл news.json, который раз в час обновляет GitHub Actions.
+const NEWS_SOURCES = [
+  "news.json",
+  "https://raw.githubusercontent.com/IcemanSweep/icemansweep.github.io/main/news.json",
+  "TV",
+  "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
+  "https://corsproxy.io/?url=" + encodeURIComponent("https://nfs.faireconomy.media/ff_calendar_thisweek.json"),
+  "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://nfs.faireconomy.media/ff_calendar_thisweek.json"),
+];
+const CURRENCIES = ["USD","EUR","GBP","JPY","CHF","CAD","AUD","NZD","CNY"];
+const DEFAULT_CUR = ["USD","EUR"];
+const CACHE_KEY = "sweep_news", CACHE_MIN = 30;
+const IMPACT = {High:3, Medium:2, Low:1, Holiday:0};
+const MAX_WORDS = /(Non-Farm|NFP|CPI|FOMC|Federal Funds|Interest Rate|Rate Decision|Main Refinancing|Monetary Policy|Press Conference|Powell|Lagarde|Core PCE)/i;
+
+// Перевод частых названий
+const RU = [
+  [/^Non-Farm Employment Change$/,"Число занятых вне с/х сектора (NFP)"],
+  [/^ADP Non-Farm Employment Change$/,"Занятость ADP"],
+  [/^Unemployment Rate$/,"Уровень безработицы"],
+  [/^Unemployment Claims$/,"Первичные заявки по безработице"],
+  [/^Average Hourly Earnings m\/m$/,"Средняя почасовая зарплата м/м"],
+  [/^JOLTS Job Openings$/,"Вакансии JOLTS"],
+  [/^Core CPI m\/m$/,"Базовый ИПЦ м/м"],[/^CPI m\/m$/,"ИПЦ м/м"],[/^CPI y\/y$/,"ИПЦ г/г"],[/^Core CPI y\/y$/,"Базовый ИПЦ г/г"],
+  [/^Flash CPI y\/y$/,"ИПЦ г/г (предв.)"],[/^Core Flash CPI y\/y$|^Flash Core CPI y\/y$/,"Базовый ИПЦ г/г (предв.)"],
+  [/^Core PPI m\/m$/,"Базовый ИЦП м/м"],[/^PPI m\/m$/,"ИЦП м/м"],
+  [/^Core PCE Price Index m\/m$/,"Базовый индекс цен PCE м/м"],
+  [/^Federal Funds Rate$/,"Решение ФРС по ставке"],[/^FOMC Statement$/,"Заявление FOMC"],
+  [/^FOMC Press Conference$/,"Пресс-конференция FOMC"],[/^FOMC Meeting Minutes$/,"Протокол FOMC"],
+  [/^FOMC Economic Projections$/,"Экономические прогнозы FOMC"],
+  [/^Fed Chair Powell Speaks$/,"Выступление главы ФРС Пауэлла"],
+  [/^Main Refinancing Rate$/,"Решение ЕЦБ по ставке"],[/^Monetary Policy Statement$/,"Заявление по монетарной политике"],
+  [/^ECB Press Conference$/,"Пресс-конференция ЕЦБ"],[/^ECB President Lagarde Speaks$/,"Выступление главы ЕЦБ Лагард"],
+  [/^Advance GDP q\/q$/,"ВВП к/к (предв.)"],[/^Prelim GDP q\/q$/,"ВВП к/к (пересм.)"],[/^Final GDP q\/q$/,"ВВП к/к (оконч.)"],[/^GDP q\/q$/,"ВВП к/к"],
+  [/^Core Retail Sales m\/m$/,"Базовые розничные продажи м/м"],[/^Retail Sales m\/m$/,"Розничные продажи м/м"],
+  [/^ISM Manufacturing PMI$/,"ISM PMI производства"],[/^ISM Services PMI$/,"ISM PMI услуг"],
+  [/^Flash Manufacturing PMI$/,"PMI производства (предв.)"],[/^Flash Services PMI$/,"PMI услуг (предв.)"],
+  [/^(.+) Flash Manufacturing PMI$/,"$1: PMI производства (предв.)"],[/^(.+) Flash Services PMI$/,"$1: PMI услуг (предв.)"],
+  [/^Crude Oil Inventories$/,"Запасы нефти"],[/^Natural Gas Storage$/,"Запасы газа"],
+  [/^Core Durable Goods Orders m\/m$/,"Базовые заказы товаров длит. пользования"],[/^Durable Goods Orders m\/m$/,"Заказы товаров длит. пользования"],
+  [/^New Home Sales$/,"Продажи нового жилья"],[/^Existing Home Sales$/,"Продажи вторичного жилья"],
+  [/^Pending Home Sales m\/m$/,"Незавершённые сделки с жильём"],[/^Building Permits$/,"Разрешения на строительство"],
+  [/^CB Consumer Confidence$/,"Доверие потребителей (CB)"],
+  [/^(Prelim |Revised )?UoM Consumer Sentiment$/,"Настроения потребителей Мичигана"],
+  [/^(Prelim |Revised )?UoM Inflation Expectations$/,"Инфляционные ожидания Мичигана"],
+  [/^German ifo Business Climate$/,"Индекс ifo Германии"],[/^German ZEW Economic Sentiment$/,"Индекс ZEW Германии"],
+  [/^Empire State Manufacturing Index$/,"Индекс ФРБ Нью-Йорка"],[/^Philly Fed Manufacturing Index$/,"Индекс ФРБ Филадельфии"],
+  [/^Trade Balance$/,"Торговый баланс"],[/^Current Account$/,"Счёт текущих операций"],
+  [/^Bank Holiday$/,"Банковский выходной"],
+  [/^(.+) Speaks$/,"Выступление: $1"],
+];
+function ru(t){ for(const [re,to] of RU){ if(re.test(t)) return t.replace(re,to); } return t; }
+
+function comment(ev){
+  if(ev.imp===0) return "Праздник · низкая ликвидность";
+  if(ev.imp===3) return MAX_WORDS.test(ev.title) ? "Максимальная волатильность" : "Высокая волатильность";
+  if(ev.imp===2) return "Умеренная волатильность";
+  return "Слабое влияние";
+}
+const calState = {events:[], day:null, imps:new Set([3,2]), curs:new Set(DEFAULT_CUR), src:""};
+
+async function loadNews(){
+  try{
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY)||"null");
+    if(c && Date.now()-c.t < CACHE_MIN*60000) return c;
+  }catch(e){}
+  for(let u of NEWS_SOURCES){
+    try{
+      const isTV = u === "TV";
+      if(isTV){ const w = weekRangeUTC(); u = `https://economic-calendar.tradingview.com/events?from=${w[0]}&to=${w[1]}&countries=US,EU,GB,JP,CN,DE`; }
+      const r = await fetch(u, {cache:"no-store"});
+      if(!r.ok) continue;
+      let d = await r.json();
+      if(isTV || (d && Array.isArray(d.result))) d = fromTV(d.result || []);
+      if(Array.isArray(d) && d.length){
+        const out = {t:Date.now(), d};
+        try{ localStorage.setItem(CACHE_KEY, JSON.stringify(out)); }catch(e){}
+        return out;
+      }
+    }catch(e){}
+  }
+  return null;
+}
+const TV_IMP = {"-1":"Low","0":"Medium","1":"High"};
+function fromTV(list){
+  return list.map(x=>({title:x.title, country:(x.currency||"").toUpperCase(), date:x.date, impact:TV_IMP[String(x.importance)]||"Low",
+    forecast:x.forecast??"", previous:x.previous??"", actual:x.actual??"", time:""})).filter(x=>x.country);
+}
+function weekRangeUTC(){
+  const k = weekBounds(); const a = new Date(k[0]+"T00:00:00+03:00"), b = new Date(k[6]+"T23:59:59+03:00");
+  return [a.toISOString(), b.toISOString()];
+}
+const fmtKey = d => fmtMSK(d,{year:"numeric",month:"2-digit",day:"2-digit"});
+function weekBounds(){ // понедельник 00:00 — воскресенье 23:59 по МСК
+  const mskNow = new Date(new Date().toLocaleString("en-US",{timeZone:MSK}));
+  const wd = mskNow.getDay();
+  const mon = new Date(mskNow); mon.setHours(0,0,0,0); mon.setDate(mon.getDate() - ((wd+6)%7));
+  const keys = []; for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); keys.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")); }
+  return keys;
+}
+const isoKey = d => { const p = new Intl.DateTimeFormat("en-CA",{timeZone:MSK,year:"numeric",month:"2-digit",day:"2-digit"}).format(d); return p; };
+
+function buildDays(){
+  const week = weekBounds();
+  const keys = week.filter(k=>calState.events.some(e=>e.key===k));
+  const todayKey = isoKey(new Date());
+  const days = $("#days");
+  days.querySelectorAll("button").forEach(b=>b.remove());
+  keys.forEach(k=>{
+    const d = calState.events.find(e=>e.key===k).date;
+    const b = document.createElement("button");
+    b.setAttribute("role","tab"); b.dataset.key = k;
+    b.innerHTML = fmtMSK(d,{weekday:"short", day:"numeric"}) + (k===todayKey?'<span class="today">СЕГОДНЯ</span>':'');
+    b.onclick = () => selectDay(k);
+    days.appendChild(b);
+  });
+  if(!keys.length) return;
+  selectDay(keys.includes(todayKey) ? todayKey : (keys.find(k=>k>todayKey) || keys[keys.length-1]));
+}
+function movePill(){
+  const b = $("#days").querySelector('[aria-selected="true"]'); if(!b) return;
+  const pill = $("#dayPill"); pill.style.left=b.offsetLeft+"px"; pill.style.width=b.offsetWidth+"px";
+}
+function selectDay(k){
+  calState.day = k;
+  $("#days").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected", b.dataset.key===k));
+  movePill(); renderEvents();
+}
+function starsHTML(n){ return '<span class="on">'+"★".repeat(n)+'</span><span class="off">'+"★".repeat(3-n)+"</span>"; }
+function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function nextBig(){
+  const now = Date.now();
+  return calState.events.find(e=>e.imp===3 && e.date.getTime()>now && calState.curs.has(e.cur));
+}
+function renderEvents(){
+  const now = Date.now(), nx = nextBig();
+  const list = calState.events.filter(e => e.key===calState.day && calState.curs.has(e.cur) && (calState.imps.has(e.imp) || e.imp===0));
+  const box = $("#events");
+  if(!list.length){ box.innerHTML = '<div class="empty">В этот день по выбранным фильтрам новостей нет.</div>'; return; }
+  box.innerHTML = list.map((e,i)=>{
+    const cls = ["ev","i"+e.imp];
+    if(e.imp===3 && MAX_WORDS.test(e.title)) cls.push("max");
+    if(e.date.getTime() < now - 60000) cls.push("past");
+    if(nx && e===nx) cls.push("next");
+    const vals = [e.actual&&("Факт "+e.actual), e.forecast&&("Прогноз "+e.forecast), e.previous&&("Пред. "+e.previous)].filter(Boolean).join(" · ");
+    return `<div class="${cls.join(" ")}" style="animation-delay:${Math.min(i,14)*35}ms">
+      <span class="t">${e.allDay?"весь день":fmtMSK(e.date,{hour:"2-digit",minute:"2-digit"})}</span>
+      <span class="cur">${esc(e.cur)}</span>
+      <span class="stars">${starsHTML(e.imp)}</span>
+      <span class="ttl" title="${esc(e.title)}">${esc(ru(e.title))}${vals?`<small>${esc(vals)}</small>`:""}</span>
+      <span class="tag">${comment(e)}</span>
+    </div>`;
+  }).join("");
+}
+function updateNext(){
+  const e = nextBig(), box = $("#calNext");
+  if(!e){ box.hidden = true; return; }
+  let s = Math.max(0, Math.floor((e.date.getTime()-Date.now())/1000));
+  const d = Math.floor(s/86400); s%=86400;
+  const hms = [Math.floor(s/3600), Math.floor(s%3600/60), s%60].map(v=>String(v).padStart(2,"0")).join(":");
+  box.hidden = false;
+  box.innerHTML = `<i></i><span>Ближайшая ★★★</span><b>${esc(e.cur)} · ${esc(ru(e.title))}</b><span class="mono">${fmtMSK(e.date,{weekday:"short",hour:"2-digit",minute:"2-digit"})}</span><span class="mono cd">через ${d?d+"д ":""}${hms}</span>`;
+}
+function buildCurFilters(){
+  const present = new Set(calState.events.map(e=>e.cur));
+  const box = $("#curFilters"); box.innerHTML = "";
+  CURRENCIES.filter(c=>present.has(c)).forEach(c=>{
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = c; b.setAttribute("aria-pressed", calState.curs.has(c));
+    b.onclick = () => {
+      if(calState.curs.has(c)){ if(calState.curs.size===1) return; calState.curs.delete(c); } else calState.curs.add(c);
+      b.setAttribute("aria-pressed", calState.curs.has(c)); renderEvents(); updateNext();
+    };
+    box.appendChild(b);
+  });
+}
+document.querySelectorAll("#impFilters [data-imp]").forEach(b=>b.onclick=()=>{
+  const n = +b.dataset.imp;
+  if(calState.imps.has(n)){ if(calState.imps.size===1) return; calState.imps.delete(n); } else calState.imps.add(n);
+  b.setAttribute("aria-pressed", calState.imps.has(n)); renderEvents();
+});
+
+(async function initNews(){
+  const res = await loadNews();
+  if(!res){
+    $("#events").innerHTML = '<div class="cal-state">Не удалось загрузить календарь. Посмотреть новости можно на <a href="https://ru.investing.com/economic-calendar/" target="_blank" rel="noopener" style="text-decoration:underline">Investing.com</a>.</div>';
+    $("#calSrc").textContent = "";
+    return;
+  }
+  const week = new Set(weekBounds());
+  calState.events = res.d.map(r=>{
+    const date = new Date(r.date);
+    return { title:r.title, cur:r.country, date, key:isoKey(date), imp: IMPACT[r.impact] ?? 1,
+      allDay: /All Day|Tentative/i.test(r.time||""), forecast:r.forecast, previous:r.previous, actual:r.actual };
+  }).filter(e=>!isNaN(e.date) && week.has(e.key)).sort((a,b)=>a.date-b.date);
+  buildCurFilters(); buildDays(); updateNext();
+  $("#calSrc").innerHTML = `Данные: <a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener">Forex Factory</a> · обновлено ${fmtMSK(new Date(res.t),{hour:"2-digit",minute:"2-digit"})} МСК · время указано по Москве`;
+  setInterval(updateNext, 1000);
+  setInterval(renderEvents, 60000);
+})();
+addEventListener("resize", movePill);
+
+/* ---------- Индекс страха и жадности (alternative.me) ---------- */
+const FNG_RU = {"Extreme Fear":"Крайний страх","Fear":"Страх","Neutral":"Нейтрально","Greed":"Жадность","Extreme Greed":"Крайняя жадность"};
+function fngColor(v){ return v<25?"#C9566A":v<45?"#B07A84":v<55?"#85858B":v<75?"#9CC7AD":"#7DBF98"; }
+async function loadFNG(){
+  try{
+    const r = await fetch("https://api.alternative.me/fng/?limit=31");
+    const j = await r.json(); const d = j.data; if(!d || !d.length) throw 0;
+    const v = +d[0].value;
+    $("#fngArc").setAttribute("stroke-dasharray", v+" 100");
+    $("#fngNeedle").style.transform = `rotate(${-90 + v*1.8}deg)`;
+    const num = $("#fngNum"); const t0 = performance.now();
+    (function step(t){ const k=Math.min(1,(t-t0)/1200), e=1-Math.pow(1-k,3); num.textContent=Math.round(v*e); if(k<1) requestAnimationFrame(step); })(t0);
+    num.style.color = fngColor(v);
+    $("#fngCls").textContent = FNG_RU[d[0].value_classification] || d[0].value_classification;
+    const pick = [1,7,30].map(i=>d[i]);
+    $("#fngHist").innerHTML = ["Вчера","Неделя назад","Месяц назад"].map((l,i)=>{
+      const x = pick[i]; return `<div><small>${l}</small><b class="mono" style="color:${x?fngColor(+x.value):""}">${x?x.value:"—"}</b></div>`;
+    }).join("");
+  }catch(e){
+    $("#fngCls").innerHTML = 'не загрузился · <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener" style="text-decoration:underline">открыть</a>';
+  }
+}
+loadFNG(); setInterval(loadFNG, 10*60000);
+
+/* ---------- Торговые сессии (время МСК) ---------- */
+// [название, открытие, закрытие]; Азия переходит через полночь
+const SESSIONS = [
+  ["Азия", 23, 33],
+  ["Франкфурт", 9, 10, "FRA"],
+  ["Лондон", 10, 15],
+  ["Нью-Йорк", 15, 22],
+];
+const CLOSED_LABEL = "Рынок закрыт";
+function tzParts(tz){ const p=new Intl.DateTimeFormat("en-GB",{timeZone:tz,hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date()); const g=t=>+p.find(x=>x.type===t).value; return {h:g("hour")%24,m:g("minute"),s:g("second")}; }
+const track = $("#kzTrack");
+const hh = h => String(((h%24)+24)%24).padStart(2,"0")+":00";
+const segs = [];
+SESSIONS.forEach(([n,a,b,short])=>{
+  const parts = b>24 ? [[a,24],[0,b-24]] : [[a,b]];
+  parts.forEach(([s,e])=>{
+    const el=document.createElement("div"); el.className="zone";
+    el.style.left=(s/24*100)+"%"; el.style.width=((e-s)/24*100)+"%";
+    el.textContent = (e-s)>=1.5 ? n : (short||""); el.title=`${n}: ${hh(a)}–${hh(b)} МСК`;
+    el._n=n; track.appendChild(el); segs.push(el);
+  });
+});
+const closed = document.createElement("div"); closed.className="zone closed";
+closed.style.left=(22/24*100)+"%"; closed.style.width=(1/24*100)+"%"; closed.title="Рынок закрыт: 22:00–23:00 МСК";
+track.appendChild(closed);
+function inSession(n, now){ const [,a,b]=SESSIONS.find(x=>x[0]===n); return b>24 ? (now>=a || now<b-24) : (now>=a && now<b); }
+function tickKZ(){
+  const a=tzParts(MSK), now=a.h+a.m/60+a.s/3600;
+  $("#kzNow").textContent=[a.h,a.m,a.s].map(v=>String(v).padStart(2,"0")).join(":")+" МСК";
+  $("#needle").style.left=(now/24*100)+"%";
+  const live = SESSIONS.filter(s=>inSession(s[0],now)).map(s=>s[0]);
+  segs.forEach(el=>el.classList.toggle("live", live.includes(el._n)));
+  let next=null, best=99;
+  SESSIONS.forEach(([n,o])=>{ if(live.includes(n)) return; let d=o-now; if(d<=0) d+=24; if(d<best){best=d;next=n;} });
+  const H=Math.floor(best), M=Math.floor((best-H)*60);
+  $("#kzNext").innerHTML=(live.length?`Сейчас: <b>${live.join(", ")}</b> · `:`<b>${CLOSED_LABEL}</b> · `)+(next?`до открытия <b>${next}</b> ${H} ч ${M} мин`:"");
+}
+tickKZ(); setInterval(tickKZ,1000);
+
+/* ---------- Кнопка скачивания ---------- */
+const dl = $("#dlBtn");
+if(APP_URL){ dl.href = APP_URL; $("#dlMeta").textContent = APP_META; }
+else { dl.classList.add("disabled"); $("#dlMeta").textContent = "ссылка скоро появится"; }
+</script>
+</body>
+</html>
