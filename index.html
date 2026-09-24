@@ -210,7 +210,7 @@ nav a:hover::after{transform:scaleX(1);transform-origin:left}
 .mock{border:1px solid var(--line);border-radius:14px;background:var(--wine-panel);aspect-ratio:4/3;max-width:100%;padding:14px;display:flex;flex-direction:column;gap:10px}
 .mock .bar{display:flex;gap:6px}
 .mock .bar i{width:8px;height:8px;border-radius:50%;background:var(--wine-line)}
-.mock svg{flex:1;width:100%}
+.mock>svg{flex:1;width:100%}
 
 
 /* ===== FEAR & GREED ===== */
@@ -252,11 +252,46 @@ nav a:hover::after{transform:scaleX(1);transform-origin:left}
 .new{display:inline-block;background:var(--wine);color:var(--fg);padding:2px 7px;border-radius:5px;margin-right:8px;letter-spacing:.1em}
 .promo{font-size:18px;line-height:1.5;color:var(--fg)!important;opacity:.85}
 .mock img{width:100%;flex:1;min-height:0;object-fit:cover;object-position:top left;border-radius:8px;display:block}
-.mock.has-shot svg{display:none}
+.mock.has-shot>svg{display:none}
 .mock.has-shot{aspect-ratio:auto;padding:10px;border-radius:18px;border-color:var(--wine);
   box-shadow:0 40px 120px -30px rgba(142,36,54,.55),0 0 0 1px rgba(201,86,106,.15);transition:transform .6s var(--ease)}
 .mock.has-shot:hover{transform:translateY(-4px) scale(1.01)}
 .mock.has-shot img{border-radius:10px;object-fit:contain}
+
+/* ===== ОКНО ПРИЛОЖЕНИЯ (вёрстка вместо картинки) ===== */
+.appui{background:#fff;color:#1b1b1d;border-radius:10px;overflow:hidden;font-family:var(--f);
+  --au-line:#ececee;--au-mut:#8a8a90;--au-soft:#f4f4f5}
+.au-top{display:flex;align-items:center;gap:14px;padding:10px 14px;border-bottom:1px solid var(--au-line)}
+.au-logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;white-space:nowrap}
+.au-ic{width:22px;height:22px;border-radius:6px;background:#1b1b1d;display:grid;place-items:center}
+.au-tabs{display:flex;gap:2px;background:var(--au-soft);border-radius:8px;padding:3px;font-size:11.5px;color:var(--au-mut);font-weight:500}
+.au-tabs>*{padding:4px 10px;border-radius:6px;white-space:nowrap}
+.au-tabs b{background:#fff;color:#1b1b1d;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.au-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.au-btn{background:#1b1b1d;color:#fff;font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:7px;white-space:nowrap}
+.au-body{padding:14px;display:grid;gap:12px;background:#fff}
+.au-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.au-card{border:1px solid var(--au-line);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.au-card small{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--au-mut)}
+.au-card b{font-family:var(--fm);font-size:20px;font-weight:500;letter-spacing:-.02em;white-space:nowrap}
+.au-card i{font-style:normal;font-size:10.5px;color:var(--au-mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.au-panel{border:1px solid var(--au-line);border-radius:9px;padding:12px 14px 8px}
+.au-ph{display:flex;flex-direction:column;gap:1px;margin-bottom:8px}
+.au-ph b{font-size:13px;font-weight:600}
+.au-ph i{font-style:normal;font-size:10.5px;color:var(--au-mut)}
+.au-chart{width:100%;height:190px;display:block;overflow:visible}
+.au-chart text{font-family:var(--fm);font-size:10px;fill:#9a9aa0}
+.au-x{display:flex;justify-content:space-between;font-family:var(--fm);font-size:10px;color:#9a9aa0;padding:4px 0 0 34px}
+.au-line{stroke-dasharray:1;stroke-dashoffset:1}
+.appui.go .au-line{animation:auDraw 2s var(--ease) forwards}
+.au-area{opacity:0}
+.appui.go .au-area{animation:auFade .9s 1.1s forwards}
+.au-dot{opacity:0}
+.appui.go .au-dot{animation:auFade .4s 1.9s forwards}
+@keyframes auDraw{to{stroke-dashoffset:0}}
+@keyframes auFade{to{opacity:1}}
+@media (max-width:1000px){.au-tabs.sm{display:none}}
+@media (max-width:620px){.au-top .au-tabs{display:none}.au-cards{grid-template-columns:repeat(2,1fr)}}
 
 /* ===== КОНТАКТЫ ===== */
 .contact-row{padding-block:22px;border-top:1px solid var(--line)}
@@ -468,13 +503,28 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
         <span>Скачать для Windows<small id="dlMeta">последняя версия</small></span>
       </a>
     </div>
-    <div class="mock reveal" aria-hidden="true">
+    <div class="mock has-shot reveal" aria-hidden="true">
       <div class="bar"><i></i><i></i><i></i></div>
-      <img id="appShot" src="journal-dashboard.png" alt="" onerror="this.remove()" onload="this.closest('.mock').classList.add('has-shot')">
-      <svg viewBox="0 0 400 240" preserveAspectRatio="none">
-        <path d="M0 200 L40 188 L80 196 L120 160 L160 170 L200 130 L240 138 L280 96 L320 104 L360 60 L400 44 L400 240 L0 240Z" fill="#8E2436" fill-opacity=".22"/>
-        <path d="M0 200 L40 188 L80 196 L120 160 L160 170 L200 130 L240 138 L280 96 L320 104 L360 60 L400 44" fill="none" stroke="#C9566A" stroke-width="2" vector-effect="non-scaling-stroke"/>
-      </svg>
+      <div class="appui">
+        <div class="au-top">
+          <div class="au-logo"><span class="au-ic"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M3 17l6-6 4 4 8-8M15 7h6v6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Trade Journal</div>
+          <div class="au-tabs"><b>Dashboard</b><span>Journal</span><span>Analysis</span><span>Assistant</span></div>
+          <div class="au-right"><div class="au-tabs sm"><b>All time</b><span>Year</span><span>Month</span></div><span class="au-btn">+ New trade</span></div>
+        </div>
+        <div class="au-body">
+          <div class="au-cards">
+            <div class="au-card"><small>Trades</small><b>64</b><i>31W · 27L · 6BE</i></div>
+            <div class="au-card"><small>Win rate</small><b>53.4%</b><i>58 closed</i></div>
+            <div class="au-card"><small>Net P/L</small><b>▲ 46.95%</b><i>gross +73.9 / −27.0</i></div>
+            <div class="au-card"><small>Profit factor</small><b>2.74</b><i>gross win / loss</i></div>
+          </div>
+          <div class="au-panel">
+            <div class="au-ph"><b>Equity curve</b><i>Cumulative profit (%) over time</i></div>
+            <svg class="au-chart" id="auChart" viewBox="0 0 600 190" preserveAspectRatio="none"></svg>
+            <div class="au-x"><span>Jun 01</span><span>Jul 26</span><span>Sep 22</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -902,6 +952,32 @@ function tickKZ(){
   $("#kzNext").innerHTML=(live.length?`Сейчас: <b>${live.join(", ")}</b> · `:`<b>${CLOSED_LABEL}</b> · `)+(next?`до открытия <b>${next}</b> ${H} ч ${M} мин`:"");
 }
 tickKZ(); setInterval(tickKZ,1000);
+
+
+/* ---------- Окно приложения: кривая equity (демо) ---------- */
+(function(){
+  const svg = document.getElementById("auChart"); if(!svg) return;
+  let seed = 7; const r = () => (seed = seed*16807 % 2147483647) / 2147483647;
+  const pts = [0]; let v = 0;
+  for(let i=0;i<64;i++){ const u=r(); v += u<.52 ? 1.5+r()*1.8 : u<.9 ? -1 : 0; pts.push(v); }
+  const k = 46.95/pts[pts.length-1]; for(let i=0;i<pts.length;i++) pts[i]*=k;
+  const min = Math.min(...pts)-3, max = Math.max(...pts)+4, L = 34, W = 600, H = 190;
+  const X = i => L + i/(pts.length-1)*(W-L-6), Y = y => 8 + (max-y)/(max-min)*(H-16);
+  let g = "";
+  for(let k=0;k<5;k++){ const val = min + (max-min)*k/4, y = Y(val);
+    g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="#eeeef0" stroke-width="1" vector-effect="non-scaling-stroke"/><text x="${L-6}" y="${y+3}" text-anchor="end">${val>=0?"+":""}${Math.round(val)}</text>`; }
+  const d = pts.map((p,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(p).toFixed(1)).join(" ");
+  const z = Y(0);
+  svg.innerHTML = g
+    + `<line x1="${L}" x2="${W}" y1="${z}" y2="${z}" stroke="#c9c9ce" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>`
+    + `<path class="au-area" d="${d} L${X(pts.length-1)} ${H-8} L${L} ${H-8}Z" fill="#1b1b1d" fill-opacity=".06"/>`
+    + `<path class="au-line" d="${d}" fill="none" stroke="#1b1b1d" stroke-width="2" pathLength="1" vector-effect="non-scaling-stroke"/>`
+    + `<circle class="au-dot" cx="${X(pts.length-1)}" cy="${Y(pts[pts.length-1])}" r="3.5" fill="#1b1b1d"/>`;
+  const box = svg.closest(".appui");
+  if("IntersectionObserver" in window){
+    new IntersectionObserver((es,o)=>es.forEach(e=>{ if(e.isIntersecting){ box.classList.add("go"); o.disconnect(); } }),{threshold:.35}).observe(box);
+  } else box.classList.add("go");
+})();
 
 /* ---------- Кнопка скачивания ---------- */
 const dl = $("#dlBtn");
