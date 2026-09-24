@@ -191,7 +191,7 @@ nav a:hover::after{transform:scaleX(1);transform-origin:left}
 .needle::before{content:"";position:absolute;top:-2px;left:-3px;width:7px;height:7px;border-radius:50%;background:var(--fg)}
 
 /* ===== ПРИЛОЖЕНИЕ ===== */
-.app{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
+.app{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.45fr);gap:48px;align-items:center;max-width:1360px}
 .app h2{font-size:clamp(34px,5vw,60px)}
 .app p{color:var(--mut);max-width:44ch}
 .feat{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:8px;font-size:14px}
@@ -253,7 +253,10 @@ nav a:hover::after{transform:scaleX(1);transform-origin:left}
 .promo{font-size:18px;line-height:1.5;color:var(--fg)!important;opacity:.85}
 .mock img{width:100%;flex:1;min-height:0;object-fit:cover;object-position:top left;border-radius:8px;display:block}
 .mock.has-shot svg{display:none}
-.mock.has-shot{aspect-ratio:auto}
+.mock.has-shot{aspect-ratio:auto;padding:10px;border-radius:18px;border-color:var(--wine);
+  box-shadow:0 40px 120px -30px rgba(142,36,54,.55),0 0 0 1px rgba(201,86,106,.15);transition:transform .6s var(--ease)}
+.mock.has-shot:hover{transform:translateY(-4px) scale(1.01)}
+.mock.has-shot img{border-radius:10px;object-fit:contain}
 
 /* ===== КОНТАКТЫ ===== */
 .contact-row{padding-block:22px;border-top:1px solid var(--line)}
