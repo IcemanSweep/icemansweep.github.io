@@ -517,7 +517,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
 
     <div class="cal-next" id="calNext" hidden></div>
     <div class="ev-wrap"><div class="curtain" id="curtain"><i></i><i></i><i></i><i></i><i></i></div><div class="events" id="events"><div class="cal-state">Загружаю календарь…</div></div></div>
-    <div class="cal-src" id="calSrc">Данные: Forex Factory</div>
+    <div class="cal-src" id="calSrc">Данные: Investing.com</div>
   </div>
 </section>
 
@@ -799,7 +799,7 @@ const CURRENCIES = ["USD","EUR","GBP","JPY","CHF","CAD","AUD","NZD","CNY"];
 const DEFAULT_CUR = ["USD","EUR"];
 const CACHE_KEY = "sweep_news", CACHE_MIN = 30;
 const IMPACT = {High:3, Medium:2, Low:1, Holiday:0};
-const MAX_WORDS = /(Non-Farm|NFP|CPI|FOMC|Federal Funds|Interest Rate|Rate Decision|Main Refinancing|Monetary Policy|Press Conference|Powell|Lagarde|Core PCE)/i;
+const MAX_WORDS = /(Non-Farm|NFP|CPI|FOMC|Federal Funds|Interest Rate|Rate Decision|Main Refinancing|Monetary Policy|Press Conference|Powell|Lagarde|Core PCE|несельскохозяйствен|ИПЦ|потребительских цен|PCE|ставк|ФРС|ЕЦБ по|пресс-конференц|Пауэлл|Лагард|ВВП)/i;
 
 // Перевод частых названий
 const RU = [
@@ -991,7 +991,9 @@ document.querySelectorAll("#impFilters [data-imp]").forEach(b=>b.onclick=()=>{
       allDay: /All Day|Tentative/i.test(r.time||""), forecast:r.forecast, previous:r.previous, actual:r.actual };
   }).filter(e=>!isNaN(e.date) && week.has(e.key)).sort((a,b)=>a.date-b.date);
   buildCurFilters(); buildDays(); updateNext();
-  $("#calSrc").innerHTML = `Данные: <a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener">Forex Factory</a> · обновлено ${fmtMSK(new Date(res.t),{hour:"2-digit",minute:"2-digit"})} МСК · время указано по Москве`;
+  const srcName = (res.d[0] && res.d[0].src) || "Forex Factory";
+  const srcUrl = srcName.startsWith("Investing") ? "https://ru.investing.com/economic-calendar/" : "https://www.forexfactory.com/calendar";
+  $("#calSrc").innerHTML = `Данные: <a href="${srcUrl}" target="_blank" rel="noopener">${srcName}</a> · обновлено ${fmtMSK(new Date(res.t),{hour:"2-digit",minute:"2-digit"})} МСК · время указано по Москве`;
   setInterval(updateNext, 1000);
   setInterval(renderEvents, 60000);
 })();
