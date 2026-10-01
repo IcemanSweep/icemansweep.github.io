@@ -1,0 +1,139 @@
+name: Обновление календаря новостей
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установить парсер
+        run: pip install beautifulsoup4
+
+      - name: Скачать календарь недели (Investing.com)
+        shell: python
+        run: |
+          import json, re, sys, urllib.request, urllib.parse
+          from datetime import datetime, timedelta, timezone
+          from bs4 import BeautifulSoup
+
+          UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36",
+                "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8"}
+          MSK = timezone(timedelta(hours=3))
+          MONTHS = {"января":1,"февраля":2,"марта":3,"апреля":4,"мая":5,"июня":6,"июля":7,"августа":8,"сентября":9,"октября":10,"ноября":11,"декабря":12}
+          IMP = {0: "Holiday", 1: "Low", 2: "Medium", 3: "High"}
+          # США, Еврозона, Германия, Великобритания, Япония, Китай, Канада, Швейцария, Австралия, Новая Зеландия
+          COUNTRIES = "5,72,17,4,35,37,6,12,25,43"
+
+          def http(url, data=None, headers=None):
+              req = urllib.request.Request(url, data=data, headers={**UA, **(headers or {})})
+              with urllib.request.urlopen(req, timeout=40) as r:
+                  return r.read().decode("utf-8", "replace")
+
+          def clean(t):
+              t = (t or "").replace("\xa0", " ").strip()
+              return "" if t in ("", "-", "—") else t
+
+          def parse_rows(html):
+              soup = BeautifulSoup(html, "html.parser")
+              out, day = [], None
+              for tr in soup.find_all("tr"):
+                  dtd = tr.find("td", class_=re.compile(r"theDay"))
+                  if dtd:
+                      m = re.search(r"(\d{1,2})\s+([а-я]+)\s+(\d{4})", dtd.get_text(" ", strip=True).lower())
+                      if m and m.group(2) in MONTHS:
+                          day = (int(m.group(3)), MONTHS[m.group(2)], int(m.group(1)))
+                      continue
+                  if not (tr.get("id", "").startswith("eventRowId") or tr.get("event_attr_id") or tr.get("data-event-datetime")):
+                      continue
+                  tds = tr.find_all("td")
+                  if len(tds) < 4:
+                      continue
+                  # дата и время (часовой пояс запроса — МСК)
+                  dt = None
+                  if tr.get("data-event-datetime"):
+                      try: dt = datetime.strptime(tr["data-event-datetime"], "%Y/%m/%d %H:%M:%S").replace(tzinfo=MSK)
+                      except ValueError: dt = None
+                  time_txt = clean(tds[0].get_text())
+                  all_day = not re.match(r"^\d{1,2}:\d{2}$", time_txt or "")
+                  if dt is None and day:
+                      hh, mm = (map(int, time_txt.split(":")) if not all_day else (0, 0))
+                      dt = datetime(*day, hh, mm, tzinfo=MSK)
+                  if dt is None:
+                      continue
+                  # валюта
+                  cur_td = tr.find("td", class_=re.compile(r"flagCur")) or tds[1]
+                  m = re.search(r"\b([A-Z]{3})\b", cur_td.get_text(" ", strip=True))
+                  if not m:
+                      continue
+                  # важность: число «быков»
+                  sent = tr.find("td", class_=re.compile(r"sentiment")) or tds[2]
+                  key = sent.get("data-img_key", "")
+                  if re.match(r"bull\d", key):
+                      imp = int(key[-1])
+                  else:
+                      imp = len(sent.find_all(class_=re.compile(r"FullBullish")))
+                  sent_txt = sent.get_text(" ", strip=True).lower()
+                  if "выходн" in sent_txt or "holiday" in sent_txt:
+                      imp = 0
+                  imp = max(0, min(3, imp)) if imp or "выходн" in sent_txt else 1
+                  # название
+                  ev_td = tr.find("td", class_=re.compile(r"\bevent\b")) or tds[3]
+                  title = re.sub(r"\s+", " ", ev_td.get_text(" ", strip=True))
+                  if not title:
+                      continue
+                  def val(kind, cls):
+                      td = tr.find("td", id=re.compile(kind)) or tr.find("td", class_=re.compile(cls))
+                      return clean(td.get_text(" ", strip=True)) if td else ""
+                  out.append({
+                      "title": title, "country": m.group(1), "date": dt.isoformat(), "impact": IMP[imp],
+                      "actual": val("eventActual", r"\bact\b"), "forecast": val("eventForecast", r"\bfore\b"),
+                      "previous": val("eventPrevious", r"\bprev\b"), "time": "All Day" if all_day else "", "src": "Investing.com",
+                  })
+              return out
+
+          def investing_widget():
+              url = ("https://sslecal2.investing.com/?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous"
+                     f"&features=timezone&countries={COUNTRIES}&importance=1,2,3&calType=week&timeZone=18&lang=7")
+              return parse_rows(http(url, headers={"Referer": "https://ru.investing.com/"}))
+
+          def investing_ajax():
+              form = [("timeZone", "18"), ("timeFilter", "timeOnly"), ("currentTab", "thisWeek"), ("submitFilters", "1"), ("limit_from", "0")]
+              form += [("country[]", c) for c in COUNTRIES.split(",")] + [("importance[]", i) for i in ("1", "2", "3")]
+              raw = http("https://ru.investing.com/economic-calendar/Service/getCalendarFilteredData",
+                         data=urllib.parse.urlencode(form).encode(),
+                         headers={"X-Requested-With": "XMLHttpRequest", "Content-Type": "application/x-www-form-urlencoded",
+                                  "Referer": "https://ru.investing.com/economic-calendar/"})
+              return parse_rows("<table>" + json.loads(raw)["data"] + "</table>")
+
+          def forex_factory():
+              d = json.loads(http("https://nfs.faireconomy.media/ff_calendar_thisweek.json"))
+              for x in d: x["src"] = "Forex Factory"
+              return d
+
+          for name, fn in (("Investing.com (виджет)", investing_widget), ("Investing.com (сайт)", investing_ajax), ("Forex Factory", forex_factory)):
+              try:
+                  data = fn()
+                  assert len(data) >= 10, f"слишком мало событий: {len(data)}"
+                  with open("news.json", "w", encoding="utf-8") as f:
+                      json.dump(data, f, ensure_ascii=False)
+                  print(f"OK: {name}, событий: {len(data)}, ★★★: {sum(1 for x in data if x['impact']=='High')}")
+                  sys.exit(0)
+              except Exception as e:
+                  print(f"{name} не ответил: {e}")
+          sys.exit(1)
+
+      - name: Сохранить в репозиторий
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add news.json
+          git diff --cached --quiet || git commit -m "news: обновление календаря"
+          git push
