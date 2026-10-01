@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sweep</title>
+<title>Sweep · Forex</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230A0A0B'/><path d='M12 48 30 16l18 32Z' fill='%23EDEDEE'/><circle cx='47' cy='20' r='6' fill='%23C9566A'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -340,6 +340,54 @@ body.has-cursor .cursor{opacity:1}
 .mask-in:not(.on)>*{transform:scale(1.06)}
 .pairs .mask-in:nth-child(2)::after,.pairs .mask-in:nth-child(2)>*{transition-delay:.12s}
 
+/* ===== ДВЕ СТРАНИЦЫ: переключатель Forex / Crypto ===== */
+@view-transition{navigation:auto}
+.top{view-transition-name:topbar}
+.switch{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:13px;font-weight:500}
+.switch a{position:relative;z-index:1;text-align:center;padding:6px 16px;border-radius:999px;color:var(--mut);transition:color .3s}
+.switch a:hover{color:var(--fg)}
+.switch a[aria-current="page"]{color:var(--bg)}
+.sw-pill{position:absolute;top:3px;bottom:3px;width:calc(50% - 3px);border-radius:999px;background:var(--fg);view-transition-name:swpill;transition:transform .45s var(--spring)}
+.switch.is-fx .sw-pill{left:3px}
+.switch.is-crypto .sw-pill{left:50%}
+.switch.is-fx:hover .sw-pill{transform:translateX(4px)}
+.switch.is-crypto:hover .sw-pill{transform:translateX(-4px)}
+::view-transition-group(swpill){animation-duration:.5s;animation-timing-function:cubic-bezier(.34,1.56,.64,1)}
+::view-transition-old(root){animation:pgOut .35s cubic-bezier(.2,.8,.2,1) both}
+::view-transition-new(root){animation:pgIn .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes pgOut{to{opacity:0;transform:translateY(-12px);filter:blur(4px)}}
+@keyframes pgIn{from{opacity:0;transform:translateY(16px);filter:blur(4px)}}
+.hs-name{font-size:30px;letter-spacing:-.02em}
+#hsMeta b{color:var(--fg);font-weight:500}
+
+/* ===== ЛЕНТА НОВОСТЕЙ ===== */
+.hl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
+.hl-top{position:relative;display:flex;flex-direction:column;gap:14px;padding:26px;border:1px solid var(--line);border-radius:18px;background:var(--panel);overflow:hidden;isolation:isolate;transition:border-color .35s}
+.hl-top::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(120% 80% at 0% 100%,rgba(142,36,54,.35),transparent 60%);opacity:.6;transition:opacity .5s}
+.hl-top:hover{border-color:var(--wine-hi)}
+.hl-top:hover::before{opacity:1}
+.hl-top-t{font-size:clamp(22px,2.4vw,30px);font-weight:500;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+.hl-sum{color:var(--mut);font-size:14px;line-height:1.5}
+.hl-read{font-size:13px;color:var(--wine-hi);margin-top:6px}
+.hl-read span{display:inline-block;transition:transform .35s var(--ease)}
+.hl-top:hover .hl-read span{transform:translateX(5px)}
+.hl-meta{font-family:var(--fm);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.hl-list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.hl-item{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:14px 6px 14px 14px;border-bottom:1px solid var(--line);animation:rowIn .5s var(--ease) both;transition:background .3s,padding .4s var(--ease)}
+.hl-item::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;background:var(--wine-hi);transform:scaleY(0);transition:transform .35s var(--ease)}
+.hl-item:hover{background:var(--panel);padding-left:20px}
+.hl-item:hover::before{transform:scaleY(1)}
+.hl-item .hl-meta{grid-column:1}
+.hl-t{grid-column:1;font-size:15px;line-height:1.35;font-weight:500}
+.hl-arr{grid-column:2;grid-row:1/3;align-self:center;color:var(--mut);transition:transform .35s var(--ease),color .3s}
+.hl-item:hover .hl-arr{color:var(--fg);transform:translate(3px,-3px)}
+.hl-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+.hl-foot .cal-src{margin:0}
+.hl-more{border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;transition:border-color .3s,background .3s}
+.hl-more:hover{border-color:var(--wine-hi);background:var(--panel)}
+@media (max-width:820px){.hl{grid-template-columns:1fr}}
+@media (max-width:760px){.top .wrap{gap:10px}.clock{display:none}}
+
 /* ===== КОНТАКТЫ ===== */
 .contact-row{padding-block:22px;border-top:1px solid var(--line)}
 .contact{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px}
@@ -389,15 +437,14 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
 <div class="cursor" id="cursor"></div>
 <header class="top">
   <div class="wrap">
-    <a class="logo" href="#"><i></i>Sweep</a>
+    <a class="logo" href="index.html"><i></i>Sweep</a>
+    <div class="switch is-fx">
+      <span class="sw-pill" aria-hidden="true"></span>
+      <a href="index.html" aria-current="page">Forex</a>
+      <a href="crypto.html">Crypto</a>
+    </div>
     <nav>
-      <a href="#markets">Рынок</a>
-      <a href="#futures">Фьючерсы</a>
-      <a href="#fng">Страх и жадность</a>
-      <a href="#calendar">Новости</a>
-      <a href="#sessions">Сессии</a>
-      <a href="#app">TradingJournal</a>
-      <a href="#contact">Связь</a>
+      <a href="#markets">Пары</a><a href="#calendar">Календарь</a><a href="#lenta">Лента</a><a href="#sessions">Сессии</a><a href="#app">TradingJournal</a><a href="#contact">Связь</a>
     </nav>
     <span class="clock" id="clock">--:-- МСК</span>
   </div>
@@ -408,44 +455,17 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
 <section class="hero">
   <div class="wrap hero-row">
     <div>
-      <div class="label">Sweep · терминал трейдера</div>
-      <h1 class="split" data-split>Рынок, новости<br><span class="dim">и сессии</span></h1>
+      <div class="label">Sweep · Forex</div>
+      <h1 class="split" data-split>Новости, пары<br><span class="dim">и сессии</span></h1>
     </div>
-    <div class="next-card fng" id="fng">
-      <div class="fng-head">
-        <div class="label"><i></i>Индекс страха и жадности · крипто</div>
-        <a class="fng-src" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener">alternative.me ↗</a>
-      </div>
-      <div class="fng-body">
-        <svg class="gauge" viewBox="0 0 200 112" aria-hidden="true">
-          <defs>
-            <linearGradient id="fngGrad" x1="0" x2="1">
-              <stop offset="0" stop-color="#8E2436"/><stop offset=".5" stop-color="#4A4A50"/><stop offset="1" stop-color="#7DBF98"/>
-            </linearGradient>
-          </defs>
-          <path d="M16 100 A84 84 0 0 1 184 100" fill="none" stroke="#1F1F22" stroke-width="12" stroke-linecap="round"/>
-          <path id="fngArc" d="M16 100 A84 84 0 0 1 184 100" fill="none" stroke="url(#fngGrad)" stroke-width="12" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
-          <g id="fngNeedle" style="transform-origin:100px 100px;transform:rotate(-90deg)">
-            <line x1="100" y1="100" x2="100" y2="30" stroke="#EDEDEE" stroke-width="2" stroke-linecap="round"/>
-          </g>
-          <circle cx="100" cy="100" r="5" fill="#EDEDEE"/>
-        </svg>
-        <div class="fng-val">
-          <div class="fng-num mono" id="fngNum">--</div>
-          <div class="fng-cls" id="fngCls">загружаю…</div>
-        </div>
-      </div>
-      <div class="fng-hist" id="fngHist">
-        <div><small>Вчера</small><b class="mono">—</b></div>
-        <div><small>Неделя назад</small><b class="mono">—</b></div>
-        <div><small>Месяц назад</small><b class="mono">—</b></div>
-      </div>
+    <div class="next-card" id="heroSess">
+      <div class="label"><i></i>Торговая сессия · МСК</div>
+      <div class="next-title hs-name" id="hsName">—</div>
+      <div class="next-meta" id="hsMeta">&nbsp;</div>
+      <div class="countdown" id="hsCount">--:--:--</div>
     </div>
   </div>
 </section>
-
-<!-- БЕГУЩАЯ СТРОКА -->
-<div class="marquee" id="tape" aria-label="Котировки"></div>
 
 <!-- ОСНОВНЫЕ ПАРЫ (бордо) -->
 <section class="sec wine" id="markets">
@@ -475,17 +495,6 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
         <div class="tvw" data-symbol="CAPITALCOM:DXY"><div class="tvw-fallback">Загружаю котировку…</div></div>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ФЬЮЧЕРСЫ (ч/б) -->
-<section class="sec" id="futures">
-  <div class="wrap">
-    <div class="sec-head">
-      <div><div class="label">Бессрочные фьючерсы · USDT</div><h2>Основные активы</h2></div>
-      <div class="feed" id="feed"><i></i><span>подключение…</span></div>
-    </div>
-    <div class="futs reveal" id="futs"></div>
   </div>
 </section>
 
@@ -521,8 +530,20 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
   </div>
 </section>
 
-<!-- СЕССИИ (бордо) -->
-<section class="sec wine" id="sessions">
+<!-- ЛЕНТА НОВОСТЕЙ -->
+<section class="sec wine" id="lenta">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="label">Лента новостей</div><h2>Что происходит на рынке</h2></div>
+      <p class="note">Главные заголовки валютного рынка и экономики. Нажми на заголовок, чтобы открыть статью.</p>
+    </div>
+    <div class="hl" id="headlines" data-feed="fx"><div class="cal-state">Загружаю новости…</div></div>
+    <div class="hl-foot"><button class="hl-more" id="hlMore" hidden>Показать ещё</button><span class="cal-src" id="hlSrc"></span></div>
+  </div>
+</section>
+
+<!-- СЕССИИ -->
+<section class="sec" id="sessions">
   <div class="wrap">
     <div class="sec-head">
       <div><div class="label">Торговые сессии</div><h2>Сессии по московскому времени</h2></div>
@@ -604,6 +625,13 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
   </div>
 </footer>
 
+<footer>
+  <div class="wrap">
+    <span>Sweep · by <a href="https://t.me/iceman27475" target="_blank" rel="noopener" style="color:var(--mut)">@iceman27475</a> · не является инвестиционной рекомендацией</span>
+    <span class="mono" id="footTime"></span>
+  </div>
+</footer>
+
 <script>
 /* ============ НАСТРОЙКИ ============ */
 // Ссылка на установщик TradingJournal (например, релиз на GitHub). Пусто — кнопка неактивна.
@@ -661,7 +689,7 @@ function buildOdo(el, val, dec){
 function tapeHTML(){
   return FUTURES.map(f=>`<span class="mq-item" data-tk="${f.s}"><b>${f.s.replace("USDT","")}</b><span class="p">—</span><span class="c">—</span></span>`).join("");
 }
-$("#tape").innerHTML = `<div class="mq-track">${tapeHTML()}</div><div class="mq-track" aria-hidden="true">${tapeHTML()}</div>`;
+if($("#tape")) $("#tape").innerHTML = `<div class="mq-track">${tapeHTML()}</div><div class="mq-track" aria-hidden="true">${tapeHTML()}</div>`;
 function tapeUpdate(sym, cur){
   const f = FUTURES.find(x=>x.s===sym); if(!f) return;
   document.querySelectorAll(`[data-tk="${sym}"]`).forEach(el=>{
@@ -700,90 +728,6 @@ function mountTV(box){
   box.appendChild(c);
 }
 document.querySelectorAll(".tvw").forEach(mountTV);
-
-/* ---------- Фьючерсы: Binance, запасной вариант Bybit ---------- */
-const futs = $("#futs");
-futs.innerHTML = FUTURES.map(f => `
-  <div class="fut" id="f-${f.s}">
-    <div class="fut-top">
-      <a class="tv sm" href="https://www.tradingview.com/chart/?symbol=${f.tv}" target="_blank" rel="noopener">
-        <span class="nm">${f.s.replace("USDT","")}</span><span class="arr"><span>↗</span><span>↗</span></span>
-      </a>
-      <small>${f.name} · PERP</small>
-    </div>
-    <div class="px odo">—</div>
-    <div class="tvw fut-chart" data-symbol="BYBIT:${f.s}.P" data-mono="1"><div class="tvw-fallback">график…</div></div>
-    <div class="range"><i style="left:50%"></i></div>
-    <div class="fut-row"><span class="lo">L —</span><span class="chg">—</span><span class="hi">H —</span></div>
-  </div>`).join("");
-futs.querySelectorAll(".fut-chart").forEach(mountTV);
-
-const state = {};
-function fmtNum(v, dec){ return Number(v).toLocaleString("en-US",{minimumFractionDigits:dec, maximumFractionDigits:dec}); }
-function update(sym, d){ // d: {last, pct, hi, lo}
-  const f = FUTURES.find(x=>x.s===sym); if(!f) return;
-  const prev = state[sym] || {};
-  const cur = state[sym] = {...prev, ...Object.fromEntries(Object.entries(d).filter(([,v])=>v!==undefined && !isNaN(v)))};
-  const el = document.getElementById("f-"+sym);
-  const px = el.querySelector(".px");
-  if(cur.last!==undefined){
-    buildOdo(px, cur.last, f.dec); tapeUpdate(sym, cur);
-    if(prev.last!==undefined && cur.last!==prev.last){
-      px.classList.remove("flash-up","flash-dn"); void px.offsetWidth;
-      px.classList.add(cur.last>prev.last?"flash-up":"flash-dn");
-      clearTimeout(px._t); px._t = setTimeout(()=>px.classList.remove("flash-up","flash-dn"), 250);
-    }
-  }
-  if(cur.pct!==undefined){
-    const c = el.querySelector(".chg");
-    c.textContent = (cur.pct>=0?"+":"") + cur.pct.toFixed(2) + "%";
-    c.className = "chg " + (cur.pct>=0?"up":"dn");
-    tapeUpdate(sym, cur);
-  }
-  if(cur.hi!==undefined && cur.lo!==undefined){
-    el.querySelector(".lo").textContent = "L " + fmtNum(cur.lo, f.dec);
-    el.querySelector(".hi").textContent = "H " + fmtNum(cur.hi, f.dec);
-    if(cur.last!==undefined && cur.hi>cur.lo){
-      const p = Math.max(0,Math.min(1,(cur.last-cur.lo)/(cur.hi-cur.lo)));
-      el.querySelector(".range i").style.left = (p*100)+"%";
-    }
-  }
-}
-function setFeed(live, text){ const f=$("#feed"); f.classList.toggle("live",live); f.querySelector("span").textContent=text; }
-
-let gotData = false, ws = null, source = "binance";
-function connectBinance(){
-  source = "binance";
-  const streams = FUTURES.map(f=>f.s.toLowerCase()+"@ticker").join("/");
-  try { ws = new WebSocket("wss://fstream.binance.com/stream?streams="+streams); } catch(e){ return connectBybit(); }
-  ws.onmessage = e => {
-    const m = JSON.parse(e.data).data; if(!m) return;
-    gotData = true; setFeed(true, "Binance Futures · live");
-    update(m.s, {last:+m.c, pct:+m.P, hi:+m.h, lo:+m.l});
-  };
-  ws.onclose = () => { if(source==="binance") setTimeout(gotData?connectBinance:connectBybit, 2000); };
-  setTimeout(()=>{ if(!gotData && source==="binance"){ try{ws.close()}catch(e){} connectBybit(); } }, 6000);
-}
-function connectBybit(){
-  source = "bybit"; setFeed(false, "переключаюсь на Bybit…");
-  ws = new WebSocket("wss://stream.bybit.com/v5/public/linear");
-  ws.onopen = () => {
-    ws.send(JSON.stringify({op:"subscribe", args:FUTURES.map(f=>"tickers."+f.s)}));
-    clearInterval(ws._ping); ws._ping = setInterval(()=>{ try{ws.send('{"op":"ping"}')}catch(e){} }, 20000);
-  };
-  ws.onmessage = e => {
-    const m = JSON.parse(e.data); if(!m.topic || !m.data) return;
-    const d = m.data; gotData = true; setFeed(true, "Bybit Futures · live");
-    update(d.symbol, {
-      last: d.lastPrice!==undefined? +d.lastPrice : undefined,
-      pct:  d.price24hPcnt!==undefined? +d.price24hPcnt*100 : undefined,
-      hi:   d.highPrice24h!==undefined? +d.highPrice24h : undefined,
-      lo:   d.lowPrice24h!==undefined? +d.lowPrice24h : undefined,
-    });
-  };
-  ws.onclose = () => { clearInterval(ws._ping); setFeed(false, "нет соединения, повтор…"); setTimeout(connectBybit, 3000); };
-}
-connectBinance();
 
 /* ---------- Календарь новостей: собственный вывод ---------- */
 // Откуда брать данные (по порядку). Первый — файл news.json, который раз в час обновляет GitHub Actions.
@@ -999,30 +943,6 @@ document.querySelectorAll("#impFilters [data-imp]").forEach(b=>b.onclick=()=>{
 })();
 addEventListener("resize", movePill);
 
-/* ---------- Индекс страха и жадности (alternative.me) ---------- */
-const FNG_RU = {"Extreme Fear":"Крайний страх","Fear":"Страх","Neutral":"Нейтрально","Greed":"Жадность","Extreme Greed":"Крайняя жадность"};
-function fngColor(v){ return v<25?"#C9566A":v<45?"#B07A84":v<55?"#85858B":v<75?"#9CC7AD":"#7DBF98"; }
-async function loadFNG(){
-  try{
-    const r = await fetch("https://api.alternative.me/fng/?limit=31");
-    const j = await r.json(); const d = j.data; if(!d || !d.length) throw 0;
-    const v = +d[0].value;
-    $("#fngArc").setAttribute("stroke-dasharray", v+" 100");
-    $("#fngNeedle").style.transform = `rotate(${-90 + v*1.8}deg)`;
-    const num = $("#fngNum"); const t0 = performance.now();
-    (function step(t){ const k=Math.min(1,(t-t0)/1200), e=1-Math.pow(1-k,3); num.textContent=Math.round(v*e); if(k<1) requestAnimationFrame(step); })(t0);
-    num.style.color = fngColor(v);
-    $("#fngCls").textContent = FNG_RU[d[0].value_classification] || d[0].value_classification;
-    const pick = [1,7,30].map(i=>d[i]);
-    $("#fngHist").innerHTML = ["Вчера","Неделя назад","Месяц назад"].map((l,i)=>{
-      const x = pick[i]; return `<div><small>${l}</small><b class="mono" style="color:${x?fngColor(+x.value):""}">${x?x.value:"—"}</b></div>`;
-    }).join("");
-  }catch(e){
-    $("#fngCls").innerHTML = 'не загрузился · <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener" style="text-decoration:underline">открыть</a>';
-  }
-}
-loadFNG(); setInterval(loadFNG, 10*60000);
-
 /* ---------- Торговые сессии (время МСК) ---------- */
 // [название, открытие, закрытие]; Азия переходит через полночь
 const SESSIONS = [
@@ -1059,9 +979,47 @@ function tickKZ(){
   SESSIONS.forEach(([n,o])=>{ if(live.includes(n)) return; let d=o-now; if(d<=0) d+=24; if(d<best){best=d;next=n;} });
   const H=Math.floor(best), M=Math.floor((best-H)*60);
   $("#kzNext").innerHTML=(live.length?`Сейчас: <b>${live.join(", ")}</b> · `:`<b>${CLOSED_LABEL}</b> · `)+(next?`до открытия <b>${next}</b> ${H} ч ${M} мин`:"");
+  if($("#hsName")){
+    $("#hsName").textContent = live.length ? live.join(" + ") : CLOSED_LABEL;
+    $("#hsMeta").innerHTML = next ? `до открытия <b>${next}</b>` : "&nbsp;";
+    const left = Math.round(best*3600); const pad = v=>String(v).padStart(2,"0");
+    $("#hsCount").textContent = pad(Math.floor(left/3600))+":"+pad(Math.floor(left%3600/60))+":"+pad(left%60);
+  }
 }
 tickKZ(); setInterval(tickKZ,1000);
 
+
+/* ---------- Лента новостей (заголовки) ---------- */
+(async function(){
+  const box = $("#headlines"); if(!box) return;
+  const key = box.dataset.feed;
+  const urls = [`headlines-${key}.json`, `https://raw.githubusercontent.com/IcemanSweep/icemansweep.github.io/main/headlines-${key}.json`];
+  let items = null;
+  for(const u of urls){
+    try{ const r = await fetch(u, {cache:"no-store"}); if(!r.ok) continue; const d = await r.json(); if(Array.isArray(d) && d.length){ items = d; break; } }catch(e){}
+  }
+  if(!items){ box.innerHTML = '<div class="cal-state">Лента появится после ближайшего обновления новостей на GitHub.</div>'; return; }
+  const ago = iso => { const m = Math.max(1, Math.round((Date.now()-new Date(iso))/60000));
+    if(m < 60) return m+" мин назад"; const h = Math.round(m/60); if(h < 24) return h+" ч назад";
+    return fmtMSK(new Date(iso),{day:"numeric",month:"short"}); };
+  const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const row = (x,i) => `<a class="hl-item" href="${esc(x.link)}" target="_blank" rel="noopener" style="animation-delay:${Math.min(i,10)*45}ms">
+      <span class="hl-meta">${esc(x.source)} · ${ago(x.date)}</span><span class="hl-t">${esc(x.title)}</span><span class="hl-arr" aria-hidden="true">↗</span></a>`;
+  const [top, ...rest] = items;
+  box.innerHTML = `<a class="hl-top" href="${esc(top.link)}" target="_blank" rel="noopener">
+      <span class="hl-meta">${esc(top.source)} · ${ago(top.date)}</span>
+      <span class="hl-top-t">${esc(top.title)}</span>
+      ${top.summary ? `<span class="hl-sum">${esc(top.summary)}</span>` : ""}
+      <span class="hl-read">Читать <span aria-hidden="true">→</span></span></a>
+    <div class="hl-list" id="hlList">${rest.slice(0,6).map(row).join("")}</div>`;
+  const more = $("#hlMore");
+  if(rest.length > 6){
+    more.hidden = false;
+    more.onclick = () => { $("#hlList").insertAdjacentHTML("beforeend", rest.slice(6).map(row).join("")); more.hidden = true; };
+  }
+  const srcs = [...new Set(items.map(x=>x.source))];
+  $("#hlSrc").textContent = "Источники: " + srcs.join(", ") + " · обновляется каждый час";
+})();
 
 /* ---------- Окно приложения: кривая equity (демо) ---------- */
 (function(){
